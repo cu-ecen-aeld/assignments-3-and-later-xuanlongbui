@@ -26,7 +26,7 @@ int main(int argc,char *argv[])
     {
         if(argc < 2){
             syslog(LOG_ERR, "The parameters were not specified " );      
-            return 0;
+            return 1;
         }else{
             filespath= argv[1];
             contentstr= argv[2];
@@ -36,7 +36,7 @@ int main(int argc,char *argv[])
     else
     {
         syslog(LOG_ERR, "The parameters were not specified " );      
-        return 0;
+        return 1;
 
     }
     char * folderpath;
@@ -51,6 +51,7 @@ int main(int argc,char *argv[])
         // printf("Directory path: %s\n", folderpath);
     } else {
         syslog(LOG_ERR, "Invalid filepath\n");
+        return 1;
     }
     check_exist_dir(folderpath,  100);
 
@@ -64,6 +65,8 @@ int main(int argc,char *argv[])
         perror("c1");
         syslog(LOG_ERR, "Couldn't open the file ");
         exit(1);
+        return 1;
+
     }
     write(fd, contentstr, strlen(contentstr)); 
     
@@ -75,6 +78,8 @@ int main(int argc,char *argv[])
         perror("c1");
         syslog(LOG_ERR, "Couldn't close the file ");
         exit(1);
+        return 1;
+
     }
     // printf("closed the fd.\n");
     closelog();
