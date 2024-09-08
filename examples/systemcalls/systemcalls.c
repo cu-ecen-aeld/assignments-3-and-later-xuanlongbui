@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/wait.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -66,13 +69,39 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
-    execv(command[0],command);
-
-    return false;
-
     va_end(args);
+    pid_t cid1;
+    int status=0;
+    int waitoptions = 0;
 
-    return true;
+    if( (cid1 = fork()) == 0 ) //child1
+    {
+        printf("in child1\n");
+        if(  execv(command[0], command) < 0 ) // GIVE ADDRESS OF 2nd element as starting point to skip source.txt
+        {
+        printf("error: child1: %d exec failed %d\n", cid1, errno);
+        printf("error: cannot execv %s\n",command[0]);
+        exit(91); //must exit child
+        }
+    }
+    else if( cid1 > 0 ) //cid>0, parent, waitfor child
+    {
+        waitpid(cid1, &status, waitoptions);
+        if (WIFEXITED(status)) {
+            printf("Child exited with status %d\n", WEXITSTATUS(status));
+            if (!WEXITSTATUS(status))
+            {
+            return true;
+            }
+        } else {
+            printf("Child did not exit successfully\n");
+        }
+    }
+    else //cid1 < 0, error
+    {
+        printf("error: child1 fork failed\n");
+    }
+    return false;
 }
 
 /**
@@ -103,23 +132,50 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
-    int kidpid;
-    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
-    if (fd < 0) { perror("open"); return false; }
-    fflush(stdout);
-    switch (kidpid = fork()) {
-    case -1: perror("fork"); abort();
-    case 0:
-        if (dup2(fd, 1) < 0) { perror("dup2");  return false;}
-        close(fd);
-        execv(command[0], command); perror("execvp");
-        return false;
-    default:
-        close(fd);
-        /* do whatever the parent wants to do. */
-    }
-
     va_end(args);
+    pid_t cid1;
+    int status=0;
+    int waitoptions = 0;
+    int fd;
 
-    return true;
+    // Open the file to redirect stdout
+    fd = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+    if( (cid1 = fork()) == 0 ) //child1
+    {
+        printf("in child1\n");
+        if (dup2(fd, STDOUT_FILENO) < 0) {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+        close(fd);
+        if( execv(command[0], command) < 0 ) // GIVE ADDRESS OF 2nd element as starting point to skip source.txt
+        {
+        printf("error: child1: %d exec failed %d\n", cid1, errno);
+        printf("error: cannot execv %s\n",command[0]);
+        exit(91); //must exit child
+        }
+    }
+    else if( cid1 > 0 ) //cid>0, parent, waitfor child
+    {
+         waitpid(cid1, &status, waitoptions);
+        if (WIFEXITED(status)) {
+            printf("Child exited with status %d\n", WEXITSTATUS(status));
+            if (!WEXITSTATUS(status))
+            {
+            return true;
+            }
+        } else {
+            printf("Child did not exit successfully\n");
+        }
+    }
+    else //cid1 < 0, error
+    {
+        printf("error: child1 fork failed\n");
+    }
+        return false;
+
 }
