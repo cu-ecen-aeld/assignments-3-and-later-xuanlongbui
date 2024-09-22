@@ -76,8 +76,8 @@ make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
 make CONFIG_PREFIX=$ROOTFS ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE install
 cd $ROOTFS
 echo "Library dependencies"
-${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter"
-${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
+${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "program interpreter"
+${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "Shared library"
 
 # TODO: Add library dependencies to rootfs
 cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
