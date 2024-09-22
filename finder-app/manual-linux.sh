@@ -65,12 +65,12 @@ git clone git://busybox.net/busybox.git
     cd busybox
     git checkout ${BUSYBOX_VERSION}
     # TODO:  Configure busybox
+    make distclean
+    make defconfig
+    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
 else
     cd busybox
 fi
-make distclean
-make defconfig
-make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
 
 # TODO: Make and install busybox
 make CONFIG_PREFIX=$ROOTFS ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE install
