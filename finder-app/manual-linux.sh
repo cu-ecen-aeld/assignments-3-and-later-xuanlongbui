@@ -35,10 +35,10 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     git checkout ${KERNEL_VERSION}
 
     # TODO: Add your kernel build steps here
-    sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
+    echo a| sudo -S apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j12
-    sudo cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
+    echo a| sudo -S cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
 fi
 
 echo "Adding the Image in outdir"
@@ -47,7 +47,7 @@ cd "$OUTDIR"
 if [ -d "${OUTDIR}/rootfs" ]
 then
 	echo "Deleting rootfs directory at ${OUTDIR}/rootfs and starting over"
-    sudo rm  -rf ${OUTDIR}/rootfs
+    echo a| sudo -S rm  -rf ${OUTDIR}/rootfs
 fi
 
 # TODO: Create necessary base directories
@@ -86,8 +86,8 @@ cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/a
 cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
 
 # TODO: Make device nodes
-sudo mknod -m 666 dev/null c 1 3
-sudo mknod -m 666 dev/tty c 5 1
+echo a| sudo -S mknod -m 666 dev/null c 1 3
+echo a| sudo -S mknod -m 666 dev/tty c 5 1
 
 # TODO: Clean and build the writer utility
 cd $FINDER_APP_DIR
@@ -106,7 +106,7 @@ cp ./conf/assignment.txt $ROOTFS/home/conf
 cp ./conf/username.txt $ROOTFS/home/conf
 
 # TODO: Chown the root directory
-sudo chown root:root $ROOTFS
+echo a| sudo -S chown root:root $ROOTFS
 # TODO: Create initramfs.cpio.gz
 cd $ROOTFS
 find . | cpio -H newc -ov --owner root:root > ${OUTDIR}/initramfs.cpio
