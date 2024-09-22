@@ -7,7 +7,7 @@ set -u
 export PATH=$PATH:/home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin
 OUTDIR=/tmp/aeld
 KERNEL_REPO=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-KERNEL_VERSION=v5.15.163
+KERNEL_VERSION=v5.1.10
 BUSYBOX_VERSION=1_33_1
 FINDER_APP_DIR=$(realpath $(dirname $0))
 ARCH=arm64
@@ -66,7 +66,7 @@ git clone git://busybox.net/busybox.git
     git checkout ${BUSYBOX_VERSION}
     # TODO:  Configure busybox
     make distclean
-    # make defconfig
+    make defconfig
     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
 else
     cd busybox
@@ -86,10 +86,10 @@ pwd
 # echo a| sudo -S cp -a /home/arch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
 # echo a| sudo -S cp -a /home/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
 
-echo a| sudo -S cp -a ${FINDER_APP_DIR}/ld-linux-aarch64.so.1 $ROOTFS/lib
-echo a| sudo -S cp -a ${FINDER_APP_DIR}/libm.so.6 $ROOTFS/lib64
-echo a| sudo -S cp -a ${FINDER_APP_DIR}/libresolv.so.2 $ROOTFS/lib64
-echo a| sudo -S cp -a ${FINDER_APP_DIR}/libc.so.6 $ROOTFS/lib64
+cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
+cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
+cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
+cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
 
 # TODO: Make device nodes
 echo a| sudo -S mknod -m 666 dev/null c 1 3
