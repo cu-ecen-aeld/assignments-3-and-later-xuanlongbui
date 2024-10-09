@@ -29,17 +29,17 @@ if [ ! -d "${OUTDIR}/linux-stable" ]; then
 	echo "CLONING GIT LINUX STABLE VERSION ${KERNEL_VERSION} IN ${OUTDIR}"
 	git clone ${KERNEL_REPO} --depth 1 --single-branch --branch ${KERNEL_VERSION}
 fi
-# if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
-#     cd linux-stable
-#     echo "Checking out version ${KERNEL_VERSION}"
-#     git checkout ${KERNEL_VERSION}
+if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
+    cd linux-stable
+    echo "Checking out version ${KERNEL_VERSION}"
+    git checkout ${KERNEL_VERSION}
 
 #     # TODO: Add your kernel build steps here
 #     echo a| sudo -S apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
 #     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
 #     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j12
 #     echo a| sudo -S cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
-# fi
+fi
 
 # echo "Adding the Image in outdir"
 # echo "Creating the staging directory for the root filesystem"
