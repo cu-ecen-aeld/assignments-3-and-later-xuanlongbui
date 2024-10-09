@@ -34,8 +34,8 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     echo "Checking out version ${KERNEL_VERSION}"
     git checkout ${KERNEL_VERSION}
 
-#     # TODO: Add your kernel build steps here
-    echo a| sudo -S apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
+   # TODO: Add your kernel build steps here
+    # echo a| sudo -S apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j12
     echo a| sudo -S cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
