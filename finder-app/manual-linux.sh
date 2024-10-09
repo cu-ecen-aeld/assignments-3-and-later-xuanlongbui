@@ -36,9 +36,9 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
 
 #     # TODO: Add your kernel build steps here
 #     echo a| sudo -S apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
-#     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
-#     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j12
-#     echo a| sudo -S cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
+    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
+    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j12
+    echo a| sudo -S cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
 fi
 
 # echo "Adding the Image in outdir"
