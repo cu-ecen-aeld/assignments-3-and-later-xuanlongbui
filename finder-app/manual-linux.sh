@@ -81,15 +81,15 @@ ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "Shared library"
 
 pwd
 # # TODO: Add library dependencies to rootfs
-# echo a| sudo -S cp -a /home/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
-# echo a| sudo -S cp -a /home/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
-# echo a| sudo -S cp -a /home/arch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
-# echo a| sudo -S cp -a /home/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
+cp  /home/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
+cp  /home/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
+cp  /home/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
+cp  /home/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
 
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
+# cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
+# cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
+# cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
+# cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
 
 # TODO: Make device nodes
 echo a| sudo -S mknod -m 666 dev/null c 1 3
