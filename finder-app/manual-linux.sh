@@ -24,31 +24,31 @@ fi
 mkdir -p ${OUTDIR}
 
 cd "$OUTDIR"
-if [ ! -d "${OUTDIR}/linux-stable" ]; then
-    #Clone only if the repository does not exist.
-	echo "CLONING GIT LINUX STABLE VERSION ${KERNEL_VERSION} IN ${OUTDIR}"
-	git clone ${KERNEL_REPO} --depth 1 --single-branch --branch ${KERNEL_VERSION}
-fi
-if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
-    cd linux-stable
-    echo "Checking out version ${KERNEL_VERSION}"
-    git checkout ${KERNEL_VERSION}
+# if [ ! -d "${OUTDIR}/linux-stable" ]; then
+#     #Clone only if the repository does not exist.
+# 	echo "CLONING GIT LINUX STABLE VERSION ${KERNEL_VERSION} IN ${OUTDIR}"
+# 	git clone ${KERNEL_REPO} --depth 1 --single-branch --branch ${KERNEL_VERSION}
+# fi
+# if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
+#     cd linux-stable
+#     echo "Checking out version ${KERNEL_VERSION}"
+#     git checkout ${KERNEL_VERSION}
 
-   # TODO: Add your kernel build steps here
-    # echo a| sudo -S apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
-    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
-    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j12
-    echo a| sudo -S cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
-fi
+#    # TODO: Add your kernel build steps here
+#     # echo a| sudo -S apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison
+#     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
+#     make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j12
+#     echo a| sudo -S cp $OUTDIR/linux-stable/arch/$ARCH/boot/Image $OUTDIR/
+# fi
 
-echo "Adding the Image in outdir"
-echo "Creating the staging directory for the root filesystem"
-cd "$OUTDIR"
-if [ -d "${OUTDIR}/rootfs" ]
-then
-	echo "Deleting rootfs directory at ${OUTDIR}/rootfs and starting over"
-    echo a| sudo -S rm  -rf ${OUTDIR}/rootfs
-fi
+# echo "Adding the Image in outdir"
+# echo "Creating the staging directory for the root filesystem"
+# cd "$OUTDIR"
+# if [ -d "${OUTDIR}/rootfs" ]
+# then
+# 	echo "Deleting rootfs directory at ${OUTDIR}/rootfs and starting over"
+#     echo a| sudo -S rm  -rf ${OUTDIR}/rootfs
+# fi
 
 # TODO: Create necessary base directories
 ROOTFS=$OUTDIR/rootfs
@@ -79,11 +79,12 @@ echo "Library dependencies"
 ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "program interpreter"
 ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "Shared library"
 
+pwd
 # TODO: Add library dependencies to rootfs
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
-cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
+cp -a /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
+cp -a /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
+cp -a /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
+cp -a /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
 
 # TODO: Make device nodes
 echo a| sudo -S mknod -m 666 dev/null c 1 3
