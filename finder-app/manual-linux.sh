@@ -80,6 +80,7 @@ ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "program interpreter"
 ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "Shared library"
 
 pwd
+hostnamectl
 # TODO: Add library dependencies to rootfs
 cp -a /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
 cp -a /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
