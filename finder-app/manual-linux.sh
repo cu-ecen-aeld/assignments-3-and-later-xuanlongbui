@@ -57,7 +57,7 @@ cd $ROOTFS
 mkdir -p bin dev etc home lib lib64 proc sbin sys tmp usr var 
 mkdir -p usr/bin usr/lib usr/sbin
 mkdir -p var/log
- 
+which aarch64-none-linux-gnu-gcc
 # cd "$OUTDIR"
 # if [ ! -d "${OUTDIR}/busybox" ]
 # then
@@ -79,14 +79,10 @@ cd $ROOTFS
 # ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "program interpreter"
 # ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "Shared library"
 echo "tessssssssssssssssssssssssssssssssssssst"
-cd /home/aarch64-none-linux-gnu/libc/lib
 pwd
-cp /home/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 ${ROOTFS}/lib
+
 # cd /home/aarch64-none-linux-gnu/libc/lib64
-pwd
-cp /home/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
-cp /home/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
-cp /home/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
+
 
 # # # TODO: Add library dependencies to rootfs
 # cp  /home/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
