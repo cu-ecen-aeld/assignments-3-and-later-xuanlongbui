@@ -4,7 +4,7 @@
 
 set -e
 set -u
-export PATH=$PATH:/home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin
+export PATH=$PATH:/usr/local/arm-cross-compiler/install/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin
 OUTDIR=/tmp/aeld
 KERNEL_REPO=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 KERNEL_VERSION=v5.1.10
@@ -78,22 +78,16 @@ cd $ROOTFS
 # echo "Library dependencies"
 # ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "program interpreter"
 # ${CROSS_COMPILE}readelf -a ${ROOTFS}/bin/busybox | grep "Shared library"
-echo "tessssssssssssssssssssssssssssssssssssst"
-pwd
 
 # cd /home/aarch64-none-linux-gnu/libc/lib64
 
 
-# # # TODO: Add library dependencies to rootfs
-# cp  /home/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
-# cp  /home/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
-# cp  /home/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
-# cp  /home/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
+ # TODO: Add library dependencies to rootfs
 
-# # cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
-# # cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
-# # cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
-# # cp /home/long/Downloads/gcc/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
+cp /usr/local/arm-cross-compiler/install/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 $ROOTFS/lib
+cp /usr/local/arm-cross-compiler/install/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 $ROOTFS/lib64
+cp /usr/local/arm-cross-compiler/install/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 $ROOTFS/lib64
+cp /usr/local/arm-cross-compiler/install/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 $ROOTFS/lib64
 
 # # TODO: Make device nodes
 # echo a| sudo -S mknod -m 666 dev/null c 1 3
