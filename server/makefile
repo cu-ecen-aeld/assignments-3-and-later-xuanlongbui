@@ -1,11 +1,33 @@
-# Makefile for compiling a C program
+# Compiler and flags
 CC = gcc
-CFLAGS = -g -Wall
-RM = rm -f
+CFLAGS = -Wall -g
 
-all: aesdsocket
+# Source files
+SRCS = aesdsocket.c
 
-aesdsocket : aesdsocket.c
-	$(CC) $(CFLAGS) -o aesdsocket  aesdsocket.c
+# Object files (generated from source files)
+OBJS = $(SRCS:.c=.o)
+
+# Executable name
+EXEC = aesdsocket
+
+# Default target (will be executed when 'make' is run with no arguments)
+default: all
+
+# 'all' target, which builds the executable
+all: $(EXEC)
+
+# Rule to build the executable from object files
+$(EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $(EXEC)
+
+# Rule to compile .c files to .o files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean up object files and the executable
 clean:
-	$(RM) aesdsocket
+	rm -f $(OBJS) $(EXEC)
+
+# Phony targets (not actual files, always executed when called)
+.PHONY: all clean default

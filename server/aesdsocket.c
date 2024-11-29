@@ -7,10 +7,32 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <fcntl.h>
-#define BUFFER_SIZE 2
+#include <signal.h>
+
+#define BUFFER_SIZE 1024
 #define PORT "9000"
 #define BACKLOG 5
 const char *file_path = "/var/tmp/aesdsocketdata";
+unsigned int should_exit = 0;
+int server_fd;
+int client_fd;
+
+void handle_signal(int sig)
+{
+    printf("Received SIGINT (Ctrl+C) or SIGTERM, terminating the program...\n");
+    // You can do clean-up here, or use exit() to terminate the program
+    should_exit = 1;
+    if (remove(file_path) == 0)
+    {
+        printf("File '%s' deleted successfully.\n", file_path);
+    }
+    else
+    {
+        perror("Error deleting file");
+    }
+    close(client_fd);
+    close(server_fd);
+}
 
 int main(int argc, char *argv[])
 {
@@ -23,10 +45,22 @@ int main(int argc, char *argv[])
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     // struct sockaddr_storage  peer_addr;
+    if (signal(SIGINT, handle_signal) == SIG_ERR)
+    {
+        perror("Error registering SIGINT handler");
+        return -1;
+        // exit(1);
+    }
+    if (signal(SIGTERM, handle_signal) == SIG_ERR)
+    {
+        perror("Error registering SIGTERM handler");
+        return -1;
+        // exit(1);
+    }
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;     /* Allow IPv4 or IPv6 */
-    hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
+    hints.ai_socktype = SOCK_STREAM; /* stream socket */
     hints.ai_flags = AI_PASSIVE;     /* For wildcard IP address */
     hints.ai_protocol = 0;           /* Any protocol */
     hints.ai_canonname = NULL;
@@ -77,7 +111,6 @@ int main(int argc, char *argv[])
         // exit(EXIT_FAILURE);
         return -1;
     }
-    int client_fd;
     struct sockaddr_in client_address;
     socklen_t client_address_len = sizeof(client_address);
 
@@ -107,7 +140,6 @@ int main(int argc, char *argv[])
     printf("Client connected with IP address: %s and port: %d\n",
            client_ip, ntohs(client_address.sin_port));
 
-    const char *file_path = "/var/tmp/aesdsocketdata";
     int fd;
 
     // Open the file, create it if it doesn't exist, with read/write permissions
@@ -121,9 +153,9 @@ int main(int argc, char *argv[])
 
     printf("File '%s' created or opened successfully.\n", file_path);
 
-    ssize_t total_received =0;
-    ssize_t bytes_received =0;
-    while (1)
+    ssize_t total_received = 0;
+    ssize_t bytes_received = 0;
+    while (!should_exit)
     {
 
         while (1)
@@ -158,33 +190,82 @@ int main(int argc, char *argv[])
             }
 
             // Stop receiving if the client sends less than a chunk
-            if (buffer[total_received -1 ] == '\n')
+            if (buffer[total_received - 1] == '\n')
             {
+                printf("Received: %s", buffer);
+                ssize_t bytes_written = write(fd, buffer, total_received); // -1 to exclude null terminator
+                if (bytes_written < 0)
+                {
+                    perror("Failed to write to file");
+                    close(fd);
+                    // exit(EXIT_FAILURE);
+                    return -1;
+                }
+                printf("Wrote %ld bytes to '%s'.\n", bytes_written, file_path);
+                // Check for "exit" command to break the loop
+                // Read from the file until EOF is reached
+                ssize_t bytesRead = 0;
+                char *rbuffer = NULL; // Buffer to store data from the file
+                off_t file_size = 0;
+
+                // Get the size of the file
+                file_size = lseek(fd, 0, SEEK_END);
+                if (file_size == -1)
+                {
+                    perror("Error getting file size");
+                    close(fd);
+                    return 1;
+                }
+                // Move the file pointer back to the beginning of the file
+                lseek(fd, 0, SEEK_SET);
+                // Allocate memory for the file content
+                rbuffer = (char *)malloc(file_size + 1); // +1 for null-terminator
+                if (rbuffer == NULL)
+                {
+                    perror("Memory allocation error");
+                    close(fd);
+                    return -1;
+                }
+
+                if (bytesRead == -1)
+                {
+                    perror("Error reading file");
+                    close(fd);
+                    return -1;
+                }
+                // Read the file content into the buffer
+                bytesRead = read(fd, rbuffer, file_size);
+                if (bytesRead == -1)
+                {
+                    perror("Error reading file");
+                    free(rbuffer);
+                    close(fd);
+                    return -1;
+                }
+
+                // Null-terminate the buffer to make it a string (optional, if you plan to treat it as text)
+                rbuffer[bytesRead] = '\0';
+                ssize_t bytesSent = send(client_fd, rbuffer, bytesRead, 0);
+                if (bytesSent == -1)
+                {
+                    perror("Error sending file data");
+                    close(fd);
+                    close(client_fd);
+                    close(server_fd);
+                    return -1;
+                }
+
+                free(rbuffer);
                 break;
             }
         }
 
-        printf("Received: %s", buffer);
-
-        ssize_t bytes_written = write(fd, buffer, total_received); // -1 to exclude null terminator
-        if (bytes_written < 0)
-        {
-            perror("Failed to write to file");
-            close(fd);
-            // exit(EXIT_FAILURE);
-            return -1;
-        }
-        printf("Wrote %ld bytes to '%s'.\n", bytes_written, file_path);
-
-        // Check for "exit" command to break the loop
-        if (strcmp(buffer, "exit\n") == 0)
-        {
-            printf("Exit command received. Closing connection.\n");
-            break;
-        }
+        total_received = 0;
+        free(buffer);
+        buffer_size = BUFFER_SIZE;
+        buffer = (char *)malloc(buffer_size);
     }
     // Write some initial data to the file
-    // const char *data = "Hello, aesdsocketdata!\n";
 
     // Close the file
     if (close(fd) < 0)
@@ -193,9 +274,7 @@ int main(int argc, char *argv[])
         // exit(EXIT_FAILURE);
         return 1;
     }
-
     printf("File '%s' closed successfully.\n", file_path);
-    close(server_fd);
     closelog();
     return 0;
 }
