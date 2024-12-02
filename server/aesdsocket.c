@@ -8,6 +8,8 @@
 #include <syslog.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <arpa/inet.h>
+#include <string.h>
 
 #define BUFFER_SIZE 1024
 #define PORT "9000"
@@ -22,6 +24,7 @@ void handle_signal(int sig)
     printf("Received SIGINT (Ctrl+C) or SIGTERM, terminating the program...\n");
     // You can do clean-up here, or use exit() to terminate the program
     should_exit = 1;
+
     if (remove(file_path) == 0)
     {
         printf("File '%s' deleted successfully.\n", file_path);
@@ -30,13 +33,42 @@ void handle_signal(int sig)
     {
         perror("Error deleting file");
     }
-    close(client_fd);
-    close(server_fd);
+
+    if (client_fd >= 0)
+    {
+        close(client_fd);
+    }
+    if (server_fd >= 0)
+    {
+        close(server_fd);
+    }
+
 }
 
 int main(int argc, char *argv[])
 {
-    int server_fd, s;
+    for (int i = 0; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-d") == 0)
+        {
+            printf("Runs the aesdsocket application as a daemon \n");
+            pid_t p;
+            p = fork();
+            if (p < 0)
+            {
+                perror("Error forking");
+                return -1;
+            }
+            if (p > 0)
+            {
+                exit(0);
+            }
+        }
+        else
+        {
+        }
+    }
+    int  s;
     char *buffer;
     // ssize_t                  nread;
     // socklen_t                peer_addrlen;
@@ -45,6 +77,25 @@ int main(int argc, char *argv[])
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     // struct sockaddr_storage  peer_addr;
+    int fd;
+
+    // Open the file, create it if it doesn't exist, with read/write permissions
+    fd = open(file_path, O_CREAT | O_RDWR, 0644);
+    if (fd < 0)
+    {
+        perror("Failed to open or create file");
+        // exit(EXIT_FAILURE);
+        return -1;
+    }
+    printf("File '%s' created or opened successfully.\n", file_path);
+    // Dynamically allocate memory for the buffer
+    buffer = (char *)malloc(buffer_size);
+    if (buffer == NULL)
+    {
+        perror("Failed to allocate memory");
+        return -1;
+    }
+
     if (signal(SIGINT, handle_signal) == SIG_ERR)
     {
         perror("Error registering SIGINT handler");
@@ -114,49 +165,27 @@ int main(int argc, char *argv[])
     struct sockaddr_in client_address;
     socklen_t client_address_len = sizeof(client_address);
 
-    if ((client_fd = accept(server_fd, (struct sockaddr *)&client_address, &client_address_len)) < 0)
-    {
-        perror("Accept failed");
-        close(server_fd);
-        // exit(EXIT_FAILURE);
-        return -1;
-    }
-    printf("Connection accepted\n");
-    // Dynamically allocate memory for the buffer
-    buffer = (char *)malloc(buffer_size);
-    if (buffer == NULL)
-    {
-        perror("Failed to allocate memory");
-        close(client_fd);
-        close(server_fd);
-        exit(EXIT_FAILURE);
-    }
-
     char client_ip[INET_ADDRSTRLEN];
     // Determine the client's IP address
-    // Convert client IP address to string
-    inet_ntop(AF_INET, &client_address.sin_addr, client_ip, INET_ADDRSTRLEN);
-    syslog(LOG_INFO, "Accepted connection from %s", client_ip);
-    printf("Client connected with IP address: %s and port: %d\n",
-           client_ip, ntohs(client_address.sin_port));
-
-    int fd;
-
-    // Open the file, create it if it doesn't exist, with read/write permissions
-    fd = open(file_path, O_CREAT | O_RDWR, 0644);
-    if (fd < 0)
-    {
-        perror("Failed to open or create file");
-        // exit(EXIT_FAILURE);
-        return -1;
-    }
-
-    printf("File '%s' created or opened successfully.\n", file_path);
 
     ssize_t total_received = 0;
     ssize_t bytes_received = 0;
     while (!should_exit)
     {
+        if ((client_fd = accept(server_fd, (struct sockaddr *)&client_address, &client_address_len)) < 0)
+        {
+            perror("Accept failed");
+            close(server_fd);
+            // exit(EXIT_FAILURE);
+            // return -1;
+            continue;
+        }
+        printf("Connection accepted\n");
+        // Convert client IP address to string
+        inet_ntop(AF_INET, &client_address.sin_addr, client_ip, INET_ADDRSTRLEN);
+        syslog(LOG_INFO, "Accepted connection from %s", client_ip);
+        printf("Client connected with IP address: %s and port: %d\n",
+               client_ip, ntohs(client_address.sin_port));
 
         while (1)
         {
@@ -168,7 +197,7 @@ int main(int argc, char *argv[])
             }
             else if (bytes_received == 0)
             {
-                printf("Client disconnected.\n");
+                // printf("Client disconnected.\n");
                 break;
             }
 
@@ -226,13 +255,6 @@ int main(int argc, char *argv[])
                     close(fd);
                     return -1;
                 }
-
-                if (bytesRead == -1)
-                {
-                    perror("Error reading file");
-                    close(fd);
-                    return -1;
-                }
                 // Read the file content into the buffer
                 bytesRead = read(fd, rbuffer, file_size);
                 if (bytesRead == -1)
@@ -252,6 +274,7 @@ int main(int argc, char *argv[])
                     close(fd);
                     close(client_fd);
                     close(server_fd);
+                    free(rbuffer);
                     return -1;
                 }
 
@@ -265,6 +288,7 @@ int main(int argc, char *argv[])
         buffer_size = BUFFER_SIZE;
         buffer = (char *)malloc(buffer_size);
     }
+    free(buffer);
     // Write some initial data to the file
 
     // Close the file
@@ -274,6 +298,7 @@ int main(int argc, char *argv[])
         // exit(EXIT_FAILURE);
         return 1;
     }
+
     printf("File '%s' closed successfully.\n", file_path);
     closelog();
     return 0;
