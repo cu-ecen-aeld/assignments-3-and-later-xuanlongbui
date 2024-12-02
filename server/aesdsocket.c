@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 
         while (1)
         {
-            bytes_received = recv(client_fd, buffer + total_received, buffer_size, 0);
+            bytes_received = recv(client_fd, buffer + total_received, BUFFER_SIZE, 0);
             if (bytes_received == -1)
             {
                 perror("Receive failed");
