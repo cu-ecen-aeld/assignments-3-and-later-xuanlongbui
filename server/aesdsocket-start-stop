@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 DAEMON_NAME="aesdsocket"
 DAEMON_PATH="/usr/bin/aesdsocket"
 
