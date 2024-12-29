@@ -1,33 +1,29 @@
-# Compiler and flags
+# Compiler
 CC = gcc
-CFLAGS = -Wall -g
+
+# Compiler flags
+CFLAGS = -Wall -Wextra -pthread -g
 
 # Source files
-SRCS = aesdsocket.c
+SRCS = main.c aesdsocket.c
 
-# Object files (generated from source files)
+# Object files (automatically derived from source files)
 OBJS = $(SRCS:.c=.o)
 
-# Executable name
-EXEC = aesdsocket
+# Output executable
+TARGET = aesdsocket
 
-# Default target (will be executed when 'make' is run with no arguments)
-default: all
+# Default target
+all: $(TARGET)
 
-# 'all' target, which builds the executable
-all: $(EXEC)
+# Link object files to create the executable
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
-# Rule to build the executable from object files
-$(EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $(EXEC)
-
-# Rule to compile .c files to .o files
+# Compile source files into object files
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean up object files and the executable
+# Clean up generated files
 clean:
-	rm -f $(OBJS) $(EXEC)
-
-# Phony targets (not actual files, always executed when called)
-.PHONY: all clean default
+	rm -f $(OBJS) $(TARGET)
