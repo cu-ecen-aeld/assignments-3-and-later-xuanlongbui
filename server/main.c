@@ -116,6 +116,36 @@ int main(int argc, char *argv[])
             
     if (mutex_init() !=0) return -1;
 
+    // Create a timer
+    timer_t timerid;
+    struct sigevent sev;
+    // Set up the timer to notify via SIGEV_THREAD
+    sev.sigev_notify = SIGEV_THREAD;           // Specify that the timer will call a function in a new thread
+    sev.sigev_notify_function = append_timestamp; // Specify the callback function
+    sev.sigev_notify_attributes = NULL;        // Default attributes (new thread for callback)
+    sev.sigev_value.sival_ptr = NULL;          // Optional data, can be used to pass information to the thread function
+
+    // Create the timer
+    if (timer_create(CLOCK_REALTIME, &sev, &timerid) == -1) {
+        perror("timer_create");
+        exit(EXIT_FAILURE);
+    }
+    printf("Timer ID: %p created successfully.\n", timerid);
+
+    // Set the time for the timer
+    struct itimerspec its;
+    its.it_value.tv_sec = 2;                 // Timer will expire in 2 seconds
+    its.it_value.tv_nsec = 0;
+    its.it_interval.tv_sec = 10;              // No repetition (one-shot timer)
+    its.it_interval.tv_nsec = 0;
+
+    // Start the timer
+    if (timer_settime(timerid, 0, &its, NULL) == -1) {
+        perror("timer_settime");
+        // exit(EXIT_FAILURE);
+        return -1;
+    }
+
     while (!should_exit)
     {
         if ((client_fd = accept(server_fd, (struct sockaddr *)&client_address, &client_address_len)) < 0)
@@ -125,23 +155,22 @@ int main(int argc, char *argv[])
             continue;
         }else
         {
-            printf("Connection accepted\n");
-            write_ip_to_syslog(client_address, client_ip);
-            // Create a thread and pass arguments
-            if (pthread_create(&thread, NULL, message_handler, &client_fd) != 0) {
-                perror("Failed to create thread");
-                return 1;
-            }
-             e = malloc(sizeof(struct node));
+            e = malloc(sizeof(struct node));
             if (e== NULL)
             {
                 perror("Failed to allocate memory for new node");
                 return -1;
             }
-            e->tid = thread;
             e->client_fd=client_fd;
-            printf("The thread just created %ld \n", e->tid);
-            fflush(stdout); // Will now print everything in the stdout buffer
+            write_ip_to_syslog(client_address, client_ip);
+            // Create a thread and pass arguments
+            if (pthread_create(&thread, NULL, message_handler, &e->client_fd) != 0) {
+                perror("Failed to create thread");
+                return -1;
+            }
+            e->tid = thread;
+            // printf("The thread just created %ld \n", e->tid);
+            // fflush(stdout); // Will now print everything in the stdout buffer
             TAILQ_INSERT_TAIL(&head, e, nodes);
             e = NULL;
         }
@@ -150,6 +179,7 @@ int main(int argc, char *argv[])
     mutex_destroy();
     struct node * read; 
     // print the queue
+    timer_delete(timerid);
     TAILQ_FOREACH(read, &head, nodes)
     {
         printf("Waiting for thread %ld \n", read->tid);

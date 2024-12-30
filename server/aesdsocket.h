@@ -15,6 +15,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <sys/queue.h>
+#include <time.h>
 
 #define BUFFER_SIZE 1024
 #define PORT "9000"
@@ -38,4 +39,5 @@ void mutex_destroy();
 
 int init_file(const char * file_path);
 int close_file();
+void *append_timestamp(void *arg);
 #endif

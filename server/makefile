@@ -1,29 +1,27 @@
-# Compiler
+# Makefile for building a program with -lrt and -pthread
+
+# Compiler to use
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -pthread -g
+CFLAGS = -Wall -g
+
+# Linker flags (add -lrt for real-time library and -pthread for threading support)
+LDFLAGS = -lrt -pthread
 
 # Source files
-SRCS = main.c aesdsocket.c
-
-# Object files (automatically derived from source files)
-OBJS = $(SRCS:.c=.o)
+SRC = main.c aesdsocket.c
 
 # Output executable
-TARGET = aesdsocket
+OUTPUT = aesdsocket
 
 # Default target
-all: $(TARGET)
+all: $(OUTPUT)
 
-# Link object files to create the executable
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+# Rule to build the executable
+$(OUTPUT): $(SRC)
+	$(CC) $(CFLAGS) $(SRC) -o $(OUTPUT) $(LDFLAGS)
 
-# Compile source files into object files
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Clean up generated files
+# Clean rule to remove generated files
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OUTPUT)

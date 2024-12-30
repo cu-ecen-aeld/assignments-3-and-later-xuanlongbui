@@ -1,9 +1,54 @@
 #include "aesdsocket.h"
+#include <time.h>
+#include <string.h>
+static pthread_mutex_t lock;
 
-static pthread_mutex_t lock; 
+static int fd = 0;
 
-static int fd =0;
-int init_file(const char * file_path){
+void *append_timestamp(void *args)
+{
+    char out_string[100];
+    const char prefix[] = "timestamp:";
+    unsigned lenght = 0;
+    const char end_char = '\n';
+    time_t now;
+    struct tm *local_time;
+    char buffer[50];
+    unsigned int i = 0;
+    now = time(NULL);             // Get the current time
+    local_time = localtime(&now); // Convert to local time
+    memset(buffer, '\0', sizeof(buffer));
+    memset(out_string, '\0', 100);
+    printf("Timer expired, thread function called!\n");
+
+    if (strftime(buffer, sizeof(buffer), "%d %b %Y %H:%M:%S", local_time) > 0)
+    {
+
+        strcat(out_string, prefix);
+        strcat(out_string, buffer);
+        strcat(out_string, &end_char);
+        for (i = 0; i < sizeof(out_string); i++)
+        {
+            if (out_string[i] == end_char)
+            {
+                lenght = i + 1;
+                break;
+            }
+        }
+        pthread_mutex_lock(&lock);
+        ssize_t bytes_written = write(fd, out_string, lenght); // -1 to exclude null terminator
+        if (bytes_written < 0)
+        {
+            perror("Failed to write to file");
+            // return -1;
+        }
+        pthread_mutex_unlock(&lock);
+    }
+
+    return NULL;
+}
+int init_file(const char *file_path)
+{
     // Open the file, create it if it doesn't exist, with read/write permissions
     fd = open(file_path, O_CREAT | O_RDWR, 0644);
     if (fd < 0)
@@ -14,36 +59,39 @@ int init_file(const char * file_path){
     printf("File '%s' created or opened successfully.\n", file_path);
     return 0;
 }
-int close_file(){
-        // Close the file
+int close_file()
+{
+    // Close the file
     if (close(fd) < 0)
     {
         return -1;
     }
     return 0;
 }
-int mutex_init(){
-       if (pthread_mutex_init(&lock, NULL) != 0) { 
-        return -1; 
+int mutex_init()
+{
+    if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        return -1;
     }
     return 0;
 }
-void mutex_destroy(){
-        pthread_mutex_destroy(&lock); 
+void mutex_destroy()
+{
+    pthread_mutex_destroy(&lock);
 }
 void write_ip_to_syslog(struct sockaddr_in in_sockaddr, char out_ip[])
 {
     // Convert client IP address to string
     inet_ntop(AF_INET, &in_sockaddr.sin_addr, out_ip, INET_ADDRSTRLEN);
     syslog(LOG_INFO, "Accepted connection from %s", out_ip);
-    printf("Client connected with IP address: %s and port: %d\n",
-           out_ip, ntohs(in_sockaddr.sin_port));
+    // printf("Client connected with IP address: %s and port: %d\n",out_ip, ntohs(in_sockaddr.sin_port));
 }
 
 void *message_handler(void *args)
 {
-    int * c_fd= (int *)args;
-    int client_fd = * c_fd;
+    int *c_fd = (int *)args;
+    const int client_fd = *c_fd;
     ssize_t bytes_received = 0;
     char *buffer;
     size_t buffer_size = BUFFER_SIZE;
@@ -89,9 +137,9 @@ void *message_handler(void *args)
         // Stop receiving if the client sends less than a chunk
         if (buffer[total_received - 1] == '\n')
         {
-            pthread_mutex_lock(&lock); 
-            
-            printf("Received: %s", buffer);
+            pthread_mutex_lock(&lock);
+
+            printf("Received from %d: %s", client_fd, buffer);
             ssize_t bytes_written = write(fd, buffer, total_received); // -1 to exclude null terminator
             if (bytes_written < 0)
             {
@@ -99,7 +147,7 @@ void *message_handler(void *args)
                 close(fd);
                 // return -1;
             }
-            printf("Wrote %ld bytes .\n", bytes_written);
+            // printf("Wrote %ld bytes .\n", bytes_written);
             // Check for "exit" command to break the loop
             // Read from the file until EOF is reached
             ssize_t bytesRead = 0;
@@ -135,7 +183,6 @@ void *message_handler(void *args)
                 // return -1;
             }
 
-            pthread_mutex_unlock(&lock); 
             // Null-terminate the buffer to make it a string (optional, if you plan to treat it as text)
             rbuffer[bytesRead] = '\0';
             ssize_t bytesSent = send(client_fd, rbuffer, bytesRead, 0);
@@ -147,6 +194,7 @@ void *message_handler(void *args)
                 // return -1;
                 break;
             }
+            pthread_mutex_unlock(&lock);
 
             free(rbuffer);
             free(buffer);
