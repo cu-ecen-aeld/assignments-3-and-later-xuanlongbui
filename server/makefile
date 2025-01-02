@@ -1,27 +1,27 @@
 # Makefile for building a program with -lrt and -pthread
 
 # Compiler to use
-CC = gcc
+CC ?= $(CROSS_COMPILE)gcc
 
 # Compiler flags
-CFLAGS = -Wall -g
+CFLAGS ?= -Wall -g
 
 # Linker flags (add -lrt for real-time library and -pthread for threading support)
-LDFLAGS = -lrt -pthread
+LDFLAGS ?= -lrt -pthread
 
 # Source files
 SRC = main.c aesdsocket.c
 
 # Output executable
-OUTPUT = aesdsocket
+TARGET ?= aesdsocket
 
 # Default target
-all: $(OUTPUT)
+all: $(TARGET)
 
 # Rule to build the executable
-$(OUTPUT): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(OUTPUT) $(LDFLAGS)
+$(TARGET): $(SRC)
+	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
 
 # Clean rule to remove generated files
 clean:
-	rm -f $(OUTPUT)
+	rm -f $(TARGET)
