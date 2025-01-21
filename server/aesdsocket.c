@@ -19,7 +19,7 @@ void *append_timestamp(void *args)
     local_time = localtime(&now); // Convert to local time
     memset(buffer, '\0', sizeof(buffer));
     memset(out_string, '\0', 100);
-    printf("Timer expired, thread function called!\n");
+   // printf("Timer expired, thread function called!\n");
 
     if (strftime(buffer, sizeof(buffer), "%d %b %Y %H:%M:%S", local_time) > 0)
     {
