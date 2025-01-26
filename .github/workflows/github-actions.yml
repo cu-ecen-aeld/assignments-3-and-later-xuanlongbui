@@ -6,42 +6,34 @@ on:
         branches:
             - '*'
 jobs:
-    unit-test:
-        container: cuaesd/aesd-autotest:24-unit-test
+      full-test:
         runs-on: self-hosted
         steps:
-          - uses: actions/checkout@v2
-          - name: Checkout submodules
-            run : git submodule update --init --recursive
-          - name: Run unit test
-            run: ./unit-test.sh
-    full-test:
-        container: cuaesd/aesd-autotest:24-assignment6
-        runs-on: self-hosted
-        steps:
-          - uses: actions/checkout@v2
-          - name: Checkout submodules
-            run : git submodule update --init --recursive
-          - name: Install Docker
+          - uses: actions/checkout@v3
+            with:
+              clean: false
+              submodules: 'recursive'
+          - uses: webfactory/ssh-agent@v0.5.4
+            with:
+                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          - name: Run build
+            timeout-minutes: 600
             run: |
-              whoami
-              sudo apt-get update
-              sudo apt-get install -y docker.io
-              sudo dockerd &
-          - name: Check Docker installation
+               docker run --rm \
+                 -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent \
+                 -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+                 -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+                 cuaesd/aesd-autotest:24-assignment6-yocto \
+                 --workdir=${GITHUB_WORKSPACE} \
+                 ./build.sh
+          - name: Cleanup
+            if: always()
             run: |
-              which docker || echo "Docker is not installed"
-              docker --version || echo "Docker not available"
+              ssh-add -D
           - name: Run full test
             timeout-minutes: 15
             run: |
-                useradd -u 1000 -m github
-                usermod -aG github github
-                chown :github /var/run/docker.sock
-                chown -R github:github ${GITHUB_WORKSPACE}
-                ls -ld ${GITHUB_WORKSPACE}
-                sudo -u github docker run --privileged --user root \
-                 --rm \
+               docker run --rm \
                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
                  cuaesd/aesd-autotest:assignment6-yocto \
                  --workdir=${GITHUB_WORKSPACE} \
