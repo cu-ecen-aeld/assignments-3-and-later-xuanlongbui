@@ -40,7 +40,7 @@ jobs:
                 chown :github /var/run/docker.sock
                 chown -R github:github ${GITHUB_WORKSPACE}
                 ls -ld ${GITHUB_WORKSPACE}
-                sudo -u github docker run --user 1000:1000 \
+                sudo -u github docker run --privileged --user github:github \
                  --rm \
                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
                  cuaesd/aesd-autotest:assignment6-yocto \
