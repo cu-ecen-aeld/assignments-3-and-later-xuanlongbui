@@ -24,6 +24,7 @@ jobs:
             run : git submodule update --init --recursive
           - name: Install Docker
             run: |
+              whoami
               sudo apt-get update
               sudo apt-get install -y docker.io
               sudo dockerd &
