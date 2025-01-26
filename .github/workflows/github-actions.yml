@@ -35,6 +35,9 @@ jobs:
           - name: Run full test
             timeout-minutes: 15
             run: |
+               ls -ld ${GITHUB_WORKSPACE}
+               chown -R 1000:1000 ${GITHUB_WORKSPACE}
+               id
                docker run --rm \
                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
                  cuaesd/aesd-autotest:assignment6-yocto \
