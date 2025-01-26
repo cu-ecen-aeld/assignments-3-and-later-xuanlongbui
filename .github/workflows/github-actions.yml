@@ -35,12 +35,8 @@ jobs:
           - name: Run full test
             timeout-minutes: 15
             run: |
-               ls -ld ${GITHUB_WORKSPACE}
-               id
-               sudo useradd -u 1000 -M github_user
-               sudo -u github_user whoami
-               chown -R 1000:1000 ${GITHUB_WORKSPACE}
-               sudo -u github_user docker run --rm \
+               chown -R 0:0 ${GITHUB_WORKSPACE}
+               docker run --rm \
                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
                  cuaesd/aesd-autotest:assignment6-yocto \
                  --workdir=${GITHUB_WORKSPACE} \
