@@ -36,7 +36,8 @@ jobs:
             timeout-minutes: 15
             run: |
                ls -ld ${GITHUB_WORKSPACE}
-               useradd -u 1000 -m docker
+               id
+               useradd -u 1000 -M docker
                chown -R docker:docker ${GITHUB_WORKSPACE}
                docker run --user 1000:1000 \
                 --rm \
