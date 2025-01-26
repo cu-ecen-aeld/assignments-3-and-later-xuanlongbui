@@ -38,8 +38,11 @@ jobs:
                 useradd -u 1000 -m github
                 usermod -aG github github
                 chown :github /var/run/docker.sock
-                chown -R 1000:1000 ${GITHUB_WORKSPACE}
-                sudo -u github docker run --rm \
+                chown -R github:github ${GITHUB_WORKSPACE}
+                ls -ld ${GITHUB_WORKSPACE}
+                
+                sudo -u github docker run --user 1000:1000 \
+                 --rm \
                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
                  cuaesd/aesd-autotest:assignment6-yocto \
                  --workdir=${GITHUB_WORKSPACE} \
