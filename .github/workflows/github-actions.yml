@@ -26,8 +26,7 @@ jobs:
             run: |
               sudo apt-get update
               sudo apt-get install -y docker.io
-              sudo systemctl start docker
-              sudo systemctl enable docker
+              sudo dockerd &
           - name: Check Docker installation
             run: |
               which docker || echo "Docker is not installed"
