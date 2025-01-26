@@ -36,7 +36,6 @@ jobs:
             timeout-minutes: 15
             run: |
                 useradd -u 1000 -m github
-                groupadd github
                 usermod -aG github github
                 chown :github /var/run/docker.sock
                 chown -R 1000:1000 ${GITHUB_WORKSPACE}
