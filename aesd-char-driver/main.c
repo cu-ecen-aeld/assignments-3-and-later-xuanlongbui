@@ -58,7 +58,6 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     struct aesd_dev *dev = filp->private_data;
     struct aesd_buffer_entry *entry = NULL;
     size_t entry_offset = 0;
-    struct aesd_buffer_entry *data_ptr;
     size_t bytes_available;
     size_t bytes_to_read;
     PDEBUG("read %zu bytes with offset %lld", count, *f_pos);
@@ -66,19 +65,17 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     if (mutex_lock_interruptible(&dev->lock))
         return -ERESTARTSYS;
 
-    data_ptr = aesd_circular_buffer_find_entry_offset_for_fpos(
+    entry = aesd_circular_buffer_find_entry_offset_for_fpos(
         &dev->buffer, *f_pos, &entry_offset);
-
-    if (!data_ptr->buffptr) {
-        retval = 0;  // EOF
-        goto out;
+    if (entry == NULL) {
+            retval = 0;  // EOF
+            goto out;
     }
 
-    // Số byte còn lại trong entry kể từ vị trí offset
     bytes_available = entry->size - entry_offset;
     bytes_to_read = min(bytes_available, count);
 
-    if (copy_to_user(buf, data_ptr->buffptr + entry_offset, bytes_to_read)) {
+    if (copy_to_user(buf, entry->buffptr + entry_offset, bytes_to_read)) {
         retval = -EFAULT;
         goto out;
     }
@@ -112,10 +109,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         goto free_kbuf;
     }
 
-    // Giả sử một entry là một dòng kết thúc bằng '\n'
     complete = memchr(kbuf, '\n', count) != NULL;
-
-    // Tăng kích thước write_buffer và copy data
+    
     dev->write_buffer = krealloc(dev->write_buffer, dev->write_buffer_size + count, GFP_KERNEL);
     if (!dev->write_buffer) {
         retval = -ENOMEM;
@@ -130,7 +125,6 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 
         new_entry.buffptr = dev->write_buffer;
         new_entry.size = dev->write_buffer_size;
-
         aesd_circular_buffer_add_entry(&dev->buffer, &new_entry);
 
         dev->write_buffer = NULL;
@@ -185,16 +179,18 @@ int aesd_init_module(void)
     /**
      * TODO: initialize the AESD specific portion of the device
      */
-    aesd_circular_buffer_init(&aesd_device.buffer);
-    mutex_init(&aesd_device.lock);
-    aesd_device.write_buffer = NULL;
-    aesd_device.write_buffer_size = 0;
-    
     result = aesd_setup_cdev(&aesd_device);
 
     if( result ) {
         unregister_chrdev_region(dev, 1);
     }
+     
+    aesd_circular_buffer_init(&aesd_device.buffer);
+    mutex_init(&aesd_device.lock);
+    aesd_device.write_buffer = NULL;
+    aesd_device.write_buffer_size = 0;
+
+    printk(KERN_INFO "aesdchar: module loaded\n");
     return result;
 
 }

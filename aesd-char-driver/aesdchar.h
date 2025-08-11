@@ -35,7 +35,7 @@ struct aesd_dev
      struct mutex lock;                   
      char *write_buffer;                  
      size_t write_buffer_size;     
-    struct cdev cdev;     /* Char device structure      */
+     struct cdev cdev;     /* Char device structure      */
 };
 
 
