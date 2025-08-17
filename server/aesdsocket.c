@@ -4,9 +4,11 @@
 static pthread_mutex_t lock;
 
 static int fd = 0;
+#define CHUNK_SIZE 4096  // đọc từng khối 4KB
 
 void *append_timestamp(void *args)
 {
+#if 0
     char out_string[100];
     const char prefix[] = "timestamp:";
     unsigned lenght = 0;
@@ -44,7 +46,7 @@ void *append_timestamp(void *args)
         }
         pthread_mutex_unlock(&lock);
     }
-
+#endif
     return NULL;
 }
 int init_file(const char *file_path)
@@ -144,59 +146,63 @@ void *message_handler(void *args)
             if (bytes_written < 0)
             {
                 perror("Failed to write to file");
-                close(fd);
                 // return -1;
             }
-            // printf("Wrote %ld bytes .\n", bytes_written);
-            // Check for "exit" command to break the loop
-            // Read from the file until EOF is reached
-            ssize_t bytesRead = 0;
-            char *rbuffer = NULL; // Buffer to store data from the file
-            off_t file_size = 0;
-
-            // Get the size of the file
-            file_size = lseek(fd, 0, SEEK_END);
-            if (file_size == -1)
+            close(fd);
+            // Reinitialize the file for reading
+            init_file("/dev/aesdchar");
+            // Send the file content back to the client
+            size_t buf_size = BUFFER_SIZE;
+            char * rBuffer = (char *)malloc(BUFFER_SIZE);
+            if (rBuffer == NULL)
             {
-                perror("Error getting file size");
-                close(fd);
-                // return 1;
-                break;
-            }
-            // Move the file pointer back to the beginning of the file
-            lseek(fd, 0, SEEK_SET);
-            // Allocate memory for the file content
-            rbuffer = (char *)malloc(file_size + 1); // +1 for null-terminator
-            if (rbuffer == NULL)
-            {
-                perror("Memory allocation error");
-                break;
+                perror("Failed to allocate memory for read buffer");
+                close(client_fd);
                 // return -1;
             }
-            // Read the file content into the buffer
-            bytesRead = read(fd, rbuffer, file_size);
-            if (bytesRead == -1)
-            {
-                perror("Error reading file");
-                free(rbuffer);
-                break;
-                // return -1;
+            size_t total_read = 0;
+            while (1) {
+            // Expand if needed
+            if (total_read >= buf_size) {
+                buf_size *= 2;
+                char *new_buf = realloc(rBuffer, buf_size);
+                if (!new_buf) {
+                    perror("realloc");
+                    free(buffer);
+                    close(fd);
+                    return NULL;
+                }
+                rBuffer = new_buf;
             }
 
-            // Null-terminate the buffer to make it a string (optional, if you plan to treat it as text)
-            rbuffer[bytesRead] = '\0';
-            ssize_t bytesSent = send(client_fd, rbuffer, bytesRead, 0);
+            ssize_t bytes = read(fd, rBuffer + total_read, buf_size - total_read);
+            printf("Read %zd bytes from file\n", bytes);
+            if (bytes < 0) {
+                perror("read");
+                free(buffer);
+                close(fd);
+                return NULL;
+            }
+            if (bytes == 0) // EOF
+                break;
+
+            total_read += bytes;
+            }
+
+            rBuffer[total_read] = '\0';
+            printf("Sending back to client %s \n ", rBuffer );
+            ssize_t bytesSent = send(client_fd, rBuffer, total_read, 0);
             if (bytesSent == -1)
             {
                 perror("Error sending file data");
                 close(client_fd);
-                free(rbuffer);
+                free(rBuffer);
                 // return -1;
                 break;
             }
             pthread_mutex_unlock(&lock);
 
-            free(rbuffer);
+            free(rBuffer);
             free(buffer);
             total_received = 0;
             buffer_size = BUFFER_SIZE;

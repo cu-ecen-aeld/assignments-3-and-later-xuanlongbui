@@ -1,6 +1,6 @@
 #include "aesdsocket.h"
 
-const char *file_path = "/var/tmp/aesdsocketdata";
+const char *file_path = "/dev/aesdchar";
 unsigned int should_exit = 0;
 int server_fd;
 int client_fd;
